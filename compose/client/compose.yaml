@@ -1,0 +1,33 @@
+name: gitlab
+
+services:
+  service:
+    image: gitlab/gitlab-ce:17.11.2-ce.0
+    container_name: gitlab-main
+    restart: always
+    hostname: 'gitlab.ddns.%REPLACE_WITH_YOUR_DOMAIN%'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.ddns.%REPLACE_WITH_YOUR_DOMAIN%'
+
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+    volumes:
+      - './service/config:/etc/gitlab'
+      - './service/logs:/var/log/gitlab'
+      - './service/data:/var/opt/gitlab'
+    shm_size: '256m'
+
+  sidecar-dyndns:
+    image: finalgene/openssh:9.1
+    container_name: gitlab-sidecar-dyndns
+    restart: always
+    network_mode: 'service:service'
+    command:
+      - sh
+      - -c
+      - 'ssh-keygen -F ddns.%REPLACE_WITH_YOUR_DOMAIN%:%REPLACE_WITH_SERVER_SSH_ENTRYPOINT% > /root/.ssh/known_hosts; ssh -p %REPLACE_WITH_SERVER_SSH_ENTRYPOINT% -N -R 127.0.0.1:%REPLACE_WITH_UNIQUE_PORT_IN_SERVER_SHARED_NETWORK%:127.0.0.1:80 ddns@ddns.%REPLACE_WITH_YOUR_DOMAIN%'
+    environment:
+      # Key that used to connect to docker container
+      SSH_DEPLOY_KEY: |
+        %REPLACE_WITH_GENERATED_PRIVATE_KEY%

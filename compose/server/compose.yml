@@ -1,0 +1,29 @@
+name: nginx-proxy-manager
+
+services:
+  service:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm-main
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      # After initial setup, make proxy_pass to nginx proxy manager itself
+      #   Do not expose 81 directly
+      # Bind openssh port to server via networkmode
+      - '%REPLACE_WITH_SERVER_SSH_ENTRYPOINT%:2222'
+    volumes:
+      - ./service/data:/data
+      - ./service/etc/letsencrypt:/etc/letsencrypt
+
+  sidecar-openssh:
+    image: linuxserver/openssh-server:version-9.9_p2-r0
+    container_name: npm-sidecar-openssh
+    restart: unless-stopped
+    network_mode: 'service:service'
+    environment:
+      DOCKER_MODS: linuxserver/mods:openssh-server-ssh-tunnel
+      PUBLIC_KEY: '%REPLACE_WITH_GENERATED_PUBLIC_KEY%'
+      SHELL_NOLOGIN: false
+      SUDO_ACCESS: true
+      USER_NAME: ddns
