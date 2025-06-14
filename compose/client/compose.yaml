@@ -23,10 +23,7 @@ services:
     container_name: gitlab-sidecar-dyndns
     restart: always
     network_mode: 'service:service'
-    command:
-      - sh
-      - -c
-      - 'ssh-keygen -F ddns.%REPLACE_WITH_YOUR_DOMAIN%:%REPLACE_WITH_SERVER_SSH_ENTRYPOINT% > /root/.ssh/known_hosts; ssh -p %REPLACE_WITH_SERVER_SSH_ENTRYPOINT% -N -R 127.0.0.1:%REPLACE_WITH_UNIQUE_PORT_IN_SERVER_SHARED_NETWORK%:127.0.0.1:80 ddns@ddns.%REPLACE_WITH_YOUR_DOMAIN%'
+    command: ssh -o UserKnownHostsFile=/dev/null -p %REPLACE_WITH_SERVER_SSH_ENTRYPOINT% -N -R 127.0.0.1:%REPLACE_WITH_UNIQUE_PORT_IN_SERVER_SHARED_NETWORK%:127.0.0.1:80 ddns@ddns.%REPLACE_WITH_YOUR_DOMAIN%'
     environment:
       # Key that used to connect to docker container
       SSH_DEPLOY_KEY: |
